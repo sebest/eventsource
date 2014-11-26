@@ -3,12 +3,14 @@ package eventsource_test
 import (
 	"fmt"
 	"github.com/donovanhide/eventsource"
+	"math/rand"
 	"net"
 	"net/http"
 )
 
 func ExampleErrorHandlingStream() {
-	listener, err := net.Listen("tcp", ":8080")
+	testPort := fmt.Sprintf(":%d", 10000+rand.Int31n(1000))
+	listener, err := net.Listen("tcp", testPort)
 	if err != nil {
 		return
 	}
@@ -18,7 +20,7 @@ func ExampleErrorHandlingStream() {
 	})
 	go http.Serve(listener, nil)
 
-	_, err = eventsource.Subscribe("http://127.0.0.1:8080/stream", "")
+	_, err = eventsource.Subscribe("http://127.0.0.1"+testPort+"/stream", "")
 	if err != nil {
 		if serr, ok := err.(eventsource.SubscriptionError); ok {
 			fmt.Printf("Status code: %d\n", serr.Code)
