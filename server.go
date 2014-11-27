@@ -9,6 +9,7 @@ type subscription struct {
 	channel     string
 	lastEventId string
 	out         chan Event
+	cout        chan string
 }
 
 type outbound struct {
@@ -19,6 +20,10 @@ type registration struct {
 	channel    string
 	repository Repository
 }
+type outComment struct {
+	channels []string
+	comment  string
+}
 
 type Server struct {
 	AllowCORS     bool // Enable all handlers to be accessible from any origin
@@ -27,6 +32,7 @@ type Server struct {
 	registrations chan *registration
 	pub           chan *outbound
 	subs          chan *subscription
+	comments      chan *outComment
 	unregister    chan *subscription
 	quit          chan bool
 }
@@ -36,6 +42,7 @@ func NewServer() *Server {
 	srv := &Server{
 		registrations: make(chan *registration),
 		pub:           make(chan *outbound),
+		comments:      make(chan *outComment),
 		subs:          make(chan *subscription),
 		unregister:    make(chan *subscription, 2),
 		quit:          make(chan bool),
@@ -85,6 +92,16 @@ func (srv *Server) Handler(channel string) http.HandlerFunc {
 					return
 				}
 				flusher.Flush()
+			case comment, ok := <-sub.cout:
+				if !ok {
+					return
+				}
+				if err := enc.Comment(comment); err != nil {
+					srv.unregister <- sub
+					log.Println(err)
+					return
+				}
+				flusher.Flush()
 			}
 		}
 	}
@@ -103,6 +120,13 @@ func (srv *Server) Publish(channels []string, ev Event) {
 	srv.pub <- &outbound{
 		channels: channels,
 		event:    ev,
+	}
+}
+
+func (srv *Server) PublishComment(channels []string, comment string) {
+	srv.comments <- &outComment{
+		channels: channels,
+		comment:  comment,
 	}
 }
 
@@ -129,6 +153,20 @@ func (srv *Server) run() {
 					default:
 						srv.unregister <- s
 						close(s.out)
+						close(s.cout)
+					}
+
+				}
+			}
+		case cmt := <-srv.comments:
+			for _, c := range cmt.channels {
+				for s := range subs[c] {
+					select {
+					case s.cout <- cmt.comment:
+					default:
+						srv.unregister <- s
+						close(s.out)
+						close(s.cout)
 					}
 
 				}
@@ -148,6 +186,7 @@ func (srv *Server) run() {
 			for _, sub := range subs {
 				for s := range sub {
 					close(s.out)
+					close(s.cout)
 				}
 			}
 			return
