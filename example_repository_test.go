@@ -34,17 +34,17 @@ func buildRepo(srv *eventsource.Server) {
 }
 
 func ExampleRepository() {
-	testPort := fmt.Sprintf(":%d", 10000+rand.Int31n(1000))
+	testPort := fmt.Sprint(10000 + rand.Int31n(1000))
 	srv := eventsource.NewServer()
 	defer srv.Close()
 	http.HandleFunc("/articles", srv.Handler("articles"))
-	l, err := net.Listen("tcp", testPort)
+	l, err := net.Listen("tcp", "127.0.0.1:"+testPort)
 	if err != nil {
 		return
 	}
 	defer l.Close()
 	go http.Serve(l, nil)
-	stream, err := eventsource.Subscribe("http://127.0.0.1"+testPort+"/articles", "")
+	stream, err := eventsource.Subscribe("http://127.0.0.1:"+testPort+"/articles", "")
 	if err != nil {
 		return
 	}
@@ -54,7 +54,7 @@ func ExampleRepository() {
 		ev := <-stream.Events
 		fmt.Println(ev.Id(), ev.Event(), ev.Data())
 	}
-	stream, err = eventsource.Subscribe("http://127.0.0.1"+testPort+"/articles", "1")
+	stream, err = eventsource.Subscribe("http://127.0.0.1:"+testPort+"/articles", "1")
 	if err != nil {
 		fmt.Println(err)
 		return

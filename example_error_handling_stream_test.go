@@ -9,8 +9,8 @@ import (
 )
 
 func ExampleErrorHandlingStream() {
-	testPort := fmt.Sprintf(":%d", 10000+rand.Int31n(1000))
-	listener, err := net.Listen("tcp", testPort)
+	testPort := fmt.Sprint(10000 + rand.Int31n(1000))
+	listener, err := net.Listen("tcp", "127.0.0.1:"+testPort)
 	if err != nil {
 		return
 	}
@@ -20,7 +20,7 @@ func ExampleErrorHandlingStream() {
 	})
 	go http.Serve(listener, nil)
 
-	_, err = eventsource.Subscribe("http://127.0.0.1"+testPort+"/stream", "")
+	_, err = eventsource.Subscribe("http://127.0.0.1:"+testPort+"/stream", "")
 	if err != nil {
 		if serr, ok := err.(eventsource.SubscriptionError); ok {
 			fmt.Printf("Status code: %d\n", serr.Code)
