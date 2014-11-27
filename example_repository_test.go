@@ -38,13 +38,13 @@ func ExampleRepository() {
 	http.HandleFunc("/articles", srv.Handler("articles"))
 	l, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
-		return
+		panic(err)
 	}
 	defer l.Close()
 	go http.Serve(l, nil)
 	stream, err := eventsource.Subscribe("http://"+l.Addr().String()+"/articles", "")
 	if err != nil {
-		return
+		panic(err)
 	}
 	go buildRepo(srv)
 	// This will receive events in the order that they come
@@ -54,8 +54,7 @@ func ExampleRepository() {
 	}
 	stream, err = eventsource.Subscribe("http://"+l.Addr().String()+"/articles", "1")
 	if err != nil {
-		fmt.Println(err)
-		return
+		panic(err)
 	}
 	// This will replay the events in order of id
 	for i := 0; i < 3; i++ {

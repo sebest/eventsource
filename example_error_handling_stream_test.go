@@ -10,7 +10,7 @@ import (
 func ExampleErrorHandlingStream() {
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
-		return
+		panic(err)
 	}
 	defer listener.Close()
 	http.HandleFunc("/stream", func(w http.ResponseWriter, r *http.Request) {

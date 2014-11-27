@@ -34,7 +34,7 @@ func ExampleEvent() {
 	defer srv.Close()
 	l, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
-		return
+		panic(err)
 	}
 	defer l.Close()
 	http.HandleFunc("/time", srv.Handler("time"))
@@ -42,7 +42,7 @@ func ExampleEvent() {
 	go TimePublisher(srv)
 	stream, err := eventsource.Subscribe("http://"+l.Addr().String()+"/time", "")
 	if err != nil {
-		return
+		panic(err)
 	}
 	for i := 0; i < TICK_COUNT; i++ {
 		ev := <-stream.Events
