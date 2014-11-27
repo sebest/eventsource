@@ -42,3 +42,10 @@ func (enc *encoder) Encode(ev Event) (err error) {
 	}
 	return
 }
+
+func (enc *encoder) Comment(comment string) (err error) {
+	if _, err = io.WriteString(enc.w, ":"+comment+"\n"); err != nil {
+		err = fmt.Errorf("Eventsource: Comment: %s", err)
+	}
+	return
+}

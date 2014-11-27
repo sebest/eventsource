@@ -42,3 +42,16 @@ func TestRoundTrip(t *testing.T) {
 		}
 	}
 }
+
+func TestComments(t *testing.T) {
+	buf := new(bytes.Buffer)
+	enc := newEncoder(buf)
+
+	comment := "test comment"
+	expected := ":" + comment + "\n"
+
+	enc.Comment(comment)
+	if buf.String() != expected {
+		t.Errorf("Expected: %s Got: %s", expected, buf.String())
+	}
+}
