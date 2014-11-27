@@ -3,7 +3,6 @@ package eventsource_test
 import (
 	"fmt"
 	"github.com/donovanhide/eventsource"
-	"math/rand"
 	"net"
 	"net/http"
 	"time"
@@ -30,11 +29,10 @@ func TimePublisher(srv *eventsource.Server) {
 }
 
 func ExampleEvent() {
-	testPort := fmt.Sprint(10000 + rand.Int31n(1000))
 
 	srv := eventsource.NewServer()
 	defer srv.Close()
-	l, err := net.Listen("tcp", "127.0.0.1:"+testPort)
+	l, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		return
 	}
@@ -42,7 +40,7 @@ func ExampleEvent() {
 	http.HandleFunc("/time", srv.Handler("time"))
 	go http.Serve(l, nil)
 	go TimePublisher(srv)
-	stream, err := eventsource.Subscribe("http://127.0.0.1:"+testPort+"/time", "")
+	stream, err := eventsource.Subscribe("http://"+l.Addr().String()+"/time", "")
 	if err != nil {
 		return
 	}
