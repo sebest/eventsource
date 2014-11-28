@@ -20,7 +20,7 @@ const (
 
 func TimePublisher(srv *eventsource.Server) {
 	start := time.Date(2013, time.January, 1, 0, 0, 0, 0, time.UTC)
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(time.Millisecond * 100)
 	for i := 0; i < TICK_COUNT; i++ {
 		<-ticker.C
 		srv.Publish([]string{"time"}, TimeEvent(start))
