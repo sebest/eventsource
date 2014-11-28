@@ -40,6 +40,7 @@ type Server struct {
 	comments      chan *outComment
 	unregister    chan *subscription
 	quit          chan bool
+	dead          bool
 }
 
 // Create a new Server ready for handler creation and publishing events
@@ -65,6 +66,10 @@ func (srv *Server) Close() {
 // Create a new handler for serving a specified channel
 func (srv *Server) Handler(channel string) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
+		if srv.dead {
+			http.Error(w, "This event source is no longer available", http.StatusGone)
+			return
+		}
 		h := w.Header()
 		h.Set("Content-Type", "text/event-stream; charset=utf-8")
 		h.Set("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -191,6 +196,14 @@ func (srv *Server) run() {
 					s.destroy()
 				}
 			}
+			close(srv.registrations)
+			close(srv.pub)
+			close(srv.comments)
+			close(srv.subs)
+			close(srv.unregister)
+			close(srv.quit)
+			close(srv.kill)
+			srv.dead = true
 			return
 		}
 	}
