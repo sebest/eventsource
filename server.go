@@ -76,6 +76,7 @@ func (srv *Server) Handler(channel string) http.HandlerFunc {
 			channel:     channel,
 			lastEventId: req.Header.Get("Last-Event-ID"),
 			out:         make(chan Event, srv.BufferSize),
+			cout:        make(chan string, srv.BufferSize),
 		}
 		srv.subs <- sub
 		flusher := w.(http.Flusher)
