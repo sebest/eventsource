@@ -12,6 +12,11 @@ type subscription struct {
 	cout        chan string
 }
 
+func (s *subscription) destroy() {
+	close(s.out)
+	close(s.cout)
+}
+
 type outbound struct {
 	channels []string
 	event    Event
@@ -144,6 +149,7 @@ func (srv *Server) run() {
 		case reg := <-srv.registrations:
 			repos[reg.channel] = reg.repository
 		case sub := <-srv.unregister:
+			sub.destroy()
 			delete(subs[sub.channel], sub)
 		case pub := <-srv.pub:
 			for _, c := range pub.channels {
@@ -152,8 +158,6 @@ func (srv *Server) run() {
 					case s.out <- pub.event:
 					default:
 						srv.unregister <- s
-						close(s.out)
-						close(s.cout)
 					}
 
 				}
@@ -165,8 +169,6 @@ func (srv *Server) run() {
 					case s.cout <- cmt.comment:
 					default:
 						srv.unregister <- s
-						close(s.out)
-						close(s.cout)
 					}
 
 				}
@@ -185,8 +187,7 @@ func (srv *Server) run() {
 		case <-srv.quit:
 			for _, sub := range subs {
 				for s := range sub {
-					close(s.out)
-					close(s.cout)
+					s.destroy()
 				}
 			}
 			return
