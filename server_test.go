@@ -25,6 +25,8 @@ func TestServer(t *testing.T) {
 				srv.Close()
 			}
 		})
+		var channel = "test"
+		var channels = []string{"test"}
 		Convey("when shutdown", func() {
 			r, _ := http.NewRequest("GET", "/test", nil)
 			var w testResponder
@@ -43,7 +45,7 @@ func TestServer(t *testing.T) {
 					c <- true
 				})
 				// This blocks while the channel is open
-				srv.Handler("test")(w, r)
+				srv.Handler(channel)(w, r)
 				completed = true
 				woop := <-c
 				So(woop, ShouldBeTrue)
@@ -60,7 +62,7 @@ func TestServer(t *testing.T) {
 					c <- true
 				})
 				// This shouldn't block
-				srv.Handler("test")(w, r)
+				srv.Handler(channel)(w, r)
 				So(w.Code, ShouldEqual, http.StatusGone)
 				completed = true
 				<-c
@@ -68,11 +70,10 @@ func TestServer(t *testing.T) {
 			Convey("panics when used", func() {
 				srv.Close()
 				closed = true
-				chans := []string{"test"}
 				So(func() { srv.Close() }, ShouldPanic)
-				So(func() { srv.Register("test", nil) }, ShouldPanic)
-				So(func() { srv.Publish(chans, nil) }, ShouldPanic)
-				So(func() { srv.PublishComment(chans, "test") }, ShouldPanic)
+				So(func() { srv.Register(channel, nil) }, ShouldPanic)
+				So(func() { srv.Publish(channels, nil) }, ShouldPanic)
+				So(func() { srv.PublishComment(channels, "test") }, ShouldPanic)
 			})
 		})
 
