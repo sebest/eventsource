@@ -33,23 +33,23 @@ func TestServer(t *testing.T) {
 			w.ResponseRecorder = httptest.NewRecorder()
 			Convey("closes active connections", func() {
 				time.AfterFunc(time.Microsecond, func() {
-					srv.Close()
 					closed = true
+					srv.Close()
 				})
 				// This blocks while the channel is open
 				srv.Handler(channel)(w, r)
-				So(true, ShouldBeTrue)
+				So(closed, ShouldBeTrue)
 			})
 			Convey("denies new connections", func() {
-				srv.Close()
 				closed = true
+				srv.Close()
 				// This shouldn't block
 				srv.Handler(channel)(w, r)
 				So(w.Code, ShouldEqual, http.StatusGone)
 			})
 			Convey("panics when used", func() {
-				srv.Close()
 				closed = true
+				srv.Close()
 				So(func() { srv.Close() }, ShouldPanic)
 				So(func() { srv.Register(channel, nil) }, ShouldPanic)
 				So(func() { srv.Publish(channels, nil) }, ShouldPanic)
