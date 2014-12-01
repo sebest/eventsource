@@ -56,6 +56,32 @@ func TestServer(t *testing.T) {
 				So(func() { srv.PublishComment(channels, "test") }, ShouldPanic)
 			})
 		})
+		Convey("when closing a channel", func() {
+			r, _ := http.NewRequest("GET", "/test", nil)
+			var w testResponder
+			w.ResponseRecorder = httptest.NewRecorder()
+			Convey("all connections on that channel are closed", func() {
+				var chanClosed = false
+				time.AfterFunc(time.Microsecond, func() {
+					chanClosed = true
+					srv.CloseChannel(channel)
+				})
+				// This blocks while the channel is open
+				srv.Handler(channel)(w, r)
+				So(chanClosed, ShouldBeTrue)
+			})
+			Convey("new connections are denied", func() {
+				srv.CloseChannel(channel)
+				// This shouldn't block
+				srv.Handler(channel)(w, r)
+				So(w.Code, ShouldEqual, http.StatusNoContent)
+			})
+			Convey("subsequent publishes do nothing", func() {
+				srv.CloseChannel(channel)
+				var ev Event = &publication{}
+				So(func() { srv.Publish(channels, ev) }, ShouldNotPanic)
+			})
+		})
 
 		// TODO MOAR
 	})

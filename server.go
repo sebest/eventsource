@@ -40,6 +40,8 @@ type Server struct {
 	comments      chan *outComment
 	unregister    chan *subscription
 	quit          chan bool
+	kill          chan string
+	deadChannels  map[string]bool
 	dead          bool
 }
 
@@ -52,6 +54,8 @@ func NewServer() *Server {
 		subs:          make(chan *subscription),
 		unregister:    make(chan *subscription, 2),
 		quit:          make(chan bool),
+		kill:          make(chan string),
+		deadChannels:  make(map[string]bool),
 		BufferSize:    128,
 	}
 	go srv.run()
@@ -68,6 +72,9 @@ func (srv *Server) Handler(channel string) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		if srv.dead {
 			http.Error(w, "This event source is no longer available", http.StatusGone)
+			return
+		} else if srv.deadChannels[channel] {
+			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 		h := w.Header()
@@ -141,6 +148,11 @@ func (srv *Server) PublishComment(channels []string, comment string) {
 	}
 }
 
+// Publish an event with the specified id to one or more channels
+func (srv *Server) CloseChannel(channel string) {
+	srv.kill <- channel
+}
+
 func replay(repo Repository, sub *subscription) {
 	for ev := range repo.Replay(sub.channel, sub.lastEventId) {
 		sub.out <- ev
@@ -179,6 +191,12 @@ func (srv *Server) run() {
 
 				}
 			}
+		case die := <-srv.kill:
+			for s := range subs[die] {
+				s.destroy()
+				delete(subs[die], s)
+			}
+			srv.deadChannels[die] = true
 		case sub := <-srv.subs:
 			if _, ok := subs[sub.channel]; !ok {
 				subs[sub.channel] = make(map[*subscription]struct{})
