@@ -8,9 +8,9 @@ import (
 )
 
 func ExampleErrorHandlingStream() {
-	listener, err := net.Listen("tcp", ":8080")
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
-		return
+		panic(err)
 	}
 	defer listener.Close()
 	http.HandleFunc("/stream", func(w http.ResponseWriter, r *http.Request) {
@@ -18,7 +18,7 @@ func ExampleErrorHandlingStream() {
 	})
 	go http.Serve(listener, nil)
 
-	_, err = eventsource.Subscribe("http://127.0.0.1:8080/stream", "")
+	_, err = eventsource.Subscribe("http://"+listener.Addr().String()+"/stream", "")
 	if err != nil {
 		if serr, ok := err.(eventsource.SubscriptionError); ok {
 			fmt.Printf("Status code: %d\n", serr.Code)

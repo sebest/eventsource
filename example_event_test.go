@@ -20,7 +20,7 @@ const (
 
 func TimePublisher(srv *eventsource.Server) {
 	start := time.Date(2013, time.January, 1, 0, 0, 0, 0, time.UTC)
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(time.Millisecond * 100)
 	for i := 0; i < TICK_COUNT; i++ {
 		<-ticker.C
 		srv.Publish([]string{"time"}, TimeEvent(start))
@@ -29,19 +29,20 @@ func TimePublisher(srv *eventsource.Server) {
 }
 
 func ExampleEvent() {
+
 	srv := eventsource.NewServer()
 	defer srv.Close()
-	l, err := net.Listen("tcp", ":8080")
+	l, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
-		return
+		panic(err)
 	}
 	defer l.Close()
 	http.HandleFunc("/time", srv.Handler("time"))
 	go http.Serve(l, nil)
 	go TimePublisher(srv)
-	stream, err := eventsource.Subscribe("http://127.0.0.1:8080/time", "")
+	stream, err := eventsource.Subscribe("http://"+l.Addr().String()+"/time", "")
 	if err != nil {
-		return
+		panic(err)
 	}
 	for i := 0; i < TICK_COUNT; i++ {
 		ev := <-stream.Events
