@@ -2,7 +2,7 @@ package eventsource_test
 
 import (
 	"fmt"
-	"github.com/donovanhide/eventsource"
+	"github.com/sebest/eventsource"
 	"net"
 	"net/http"
 	"time"

@@ -4,11 +4,11 @@ Eventsource implements a  [Go](http://golang.org/) implementation of  client and
 
 ## Installation
 
-    go get github.com/donovanhide/eventsource
+    go get github.com/sebest/eventsource
 
 ## Documentation
 
-* [Reference](http://godoc.org/github.com/donovanhide/eventsource)
+* [Reference](http://godoc.org/github.com/sebest/eventsource)
 
 ## License
 
