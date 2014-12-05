@@ -3,9 +3,10 @@ package eventsource_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/sebest/eventsource"
 	"net"
 	"net/http"
+
+	"github.com/sebest/eventsource"
 )
 
 type NewsArticle struct {
@@ -42,7 +43,7 @@ func ExampleRepository() {
 	}
 	defer l.Close()
 	go http.Serve(l, nil)
-	stream, err := eventsource.Subscribe("http://"+l.Addr().String()+"/articles", "")
+	stream, err := eventsource.Subscribe("http://"+l.Addr().String()+"/articles", "", "", "")
 	if err != nil {
 		panic(err)
 	}
@@ -52,7 +53,7 @@ func ExampleRepository() {
 		ev := <-stream.Events
 		fmt.Println(ev.Id(), ev.Event(), ev.Data())
 	}
-	stream, err = eventsource.Subscribe("http://"+l.Addr().String()+"/articles", "1")
+	stream, err = eventsource.Subscribe("http://"+l.Addr().String()+"/articles", "1", "", "")
 	if err != nil {
 		panic(err)
 	}

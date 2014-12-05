@@ -2,9 +2,10 @@ package eventsource_test
 
 import (
 	"fmt"
-	"github.com/sebest/eventsource"
 	"net"
 	"net/http"
+
+	"github.com/sebest/eventsource"
 )
 
 func ExampleErrorHandlingStream() {
@@ -18,7 +19,7 @@ func ExampleErrorHandlingStream() {
 	})
 	go http.Serve(listener, nil)
 
-	_, err = eventsource.Subscribe("http://"+listener.Addr().String()+"/stream", "")
+	_, err = eventsource.Subscribe("http://"+listener.Addr().String()+"/stream", "", "", "")
 	if err != nil {
 		if serr, ok := err.(eventsource.SubscriptionError); ok {
 			fmt.Printf("Status code: %d\n", serr.Code)

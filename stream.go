@@ -16,6 +16,8 @@ type Stream struct {
 	c           http.Client
 	url         string
 	lastEventId string
+	username    string
+	password    string
 	retry       time.Duration
 	// Events emits the events received by the stream
 	Events chan Event
@@ -37,10 +39,12 @@ func (e SubscriptionError) Error() string {
 
 // Subscribe to the Events emitted from the specified url.
 // If lastEventId is non-empty it will be sent to the server in case it can replay missed events.
-func Subscribe(url, lastEventId string) (*Stream, error) {
+func Subscribe(url, lastEventId string, username string, password string) (*Stream, error) {
 	stream := &Stream{
 		url:         url,
 		lastEventId: lastEventId,
+		username:    username,
+		password:    password,
 		retry:       (time.Millisecond * 3000),
 		Events:      make(chan Event),
 		Errors:      make(chan error),
@@ -63,6 +67,9 @@ func (stream *Stream) connect() (r io.ReadCloser, err error) {
 	req.Header.Set("Accept", "text/event-stream")
 	if len(stream.lastEventId) > 0 {
 		req.Header.Set("Last-Event-ID", stream.lastEventId)
+	}
+	if stream.username != "" && stream.password != "" {
+		req.SetBasicAuth(stream.username, stream.password)
 	}
 	if resp, err = stream.c.Do(req); err != nil {
 		return

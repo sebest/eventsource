@@ -2,10 +2,11 @@ package eventsource_test
 
 import (
 	"fmt"
-	"github.com/sebest/eventsource"
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/sebest/eventsource"
 )
 
 type TimeEvent time.Time
@@ -40,7 +41,7 @@ func ExampleEvent() {
 	http.HandleFunc("/time", srv.Handler("time"))
 	go http.Serve(l, nil)
 	go TimePublisher(srv)
-	stream, err := eventsource.Subscribe("http://"+l.Addr().String()+"/time", "")
+	stream, err := eventsource.Subscribe("http://"+l.Addr().String()+"/time", "", "", "")
 	if err != nil {
 		panic(err)
 	}
